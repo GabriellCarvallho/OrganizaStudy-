@@ -1,0 +1,33 @@
+venv/
+env/
+.venv/
+ENV/
+
+
+docs/
+
+# Byte-compiled / Python (Arquivos temporários do Python)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Variáveis de Ambiente (Segurança - NÃO envie suas senhas!)
+.env
+
+# Banco de Dados Local (SQLite)
+*.sqlite3
+
+# Arquivos de Mídia (Uploads de usuários no seu app knowledge)
+media/
+
+# Arquivos Estáticos Coletados
+static_root/
+staticfiles/
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+
+# Docker
+.docker/
