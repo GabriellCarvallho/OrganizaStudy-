@@ -37,4 +37,7 @@ organizaEstudy/
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 168c050 (feat: add core/models and readjust gitignore and readme.md)

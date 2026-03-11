@@ -1,0 +1,70 @@
+================================================================
+       ORGANIZAESTUDY — HOTFIX: AUTENTICAÇÃO POR E-MAIL
+       Data: 06 de Março de 2026
+================================================================
+
+
+----------------------------------------------------------------
+PROBLEMA
+----------------------------------------------------------------
+
+Após implementar o fluxo de autenticação completo na Fase 2,
+o login retornava "E-mail ou senha inválidos" mesmo com
+credenciais corretas recém-cadastradas.
+
+
+----------------------------------------------------------------
+CAUSA RAIZ
+----------------------------------------------------------------
+
+O Django autentica usuários pelo campo "username" por padrão.
+O EmailAuthenticationForm foi implementado para exibir um campo
+de e-mail na interface, mas internamente o Django continuava
+tentando buscar o usuário pelo campo "username" no banco —
+não pelo campo "email".
+
+Como o username do usuário cadastrado era "gabriel" e não
+"gabriel@email.com", a busca nunca encontrava nenhum registro,
+resultando sempre em falha de autenticação.
+
+
+----------------------------------------------------------------
+SOLUÇÃO
+----------------------------------------------------------------
+
+Foram feitas duas alterações no projeto:
+
+1. Criado o arquivo apps/users/backends.py
+   Um backend de autenticação customizado chamado EmailBackend
+   que sobrescreve o comportamento padrão do Django. Ele recebe
+   o e-mail no parâmetro "username" (exigência interna do
+   AuthenticationForm) e busca o usuário pelo campo "email"
+   no banco de dados em vez do campo "username".
+
+2. Adicionado em config/settings/base.py
+   O novo EmailBackend foi registrado na variável
+   AUTHENTICATION_BACKENDS para que o Django o utilize
+   no lugar do backend padrão.
+
+
+----------------------------------------------------------------
+POR QUE FUNCIONA
+----------------------------------------------------------------
+
+O EmailBackend herda do ModelBackend original do Django,
+mantendo toda a lógica de segurança existente como verificação
+de conta ativa e proteção contra timing attacks. A única
+mudança é o campo usado para buscar o usuário no banco:
+email em vez de username.
+
+
+----------------------------------------------------------------
+RESULTADO
+----------------------------------------------------------------
+
+Antes: login sempre falhava com credenciais corretas
+Depois: login por e-mail funcionando corretamente
+
+Fase 2 — App Users: 100% concluída. ✅
+
+================================================================
