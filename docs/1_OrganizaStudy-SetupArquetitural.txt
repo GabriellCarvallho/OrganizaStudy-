@@ -1,0 +1,46 @@
+📝 Log de Desenvolvimento - Commit 01: Setup Arquitetural
+Data: 24 de Fevereiro de 2026
+Objetivo: Transição da estrutura padrão do Django para uma arquitetura modular, profissional e escalável.
+
+🏗️ 1. Reestruturação do Sistema de Arquivos
+O projeto foi reorganizado para suportar múltiplos ambientes e manter a raiz limpa:
+
+apps/: Criada para centralizar toda a lógica de negócio. Configuramos o sys.path no base.py para permitir importações diretas (ex: import users em vez de import apps.users).
+
+config/settings/: O settings.py original foi desmembrado em:
+
+base.py: Configurações globais e compartilhadas.
+
+development.py: Configurações específicas para desenvolvimento local (SQLite, DEBUG=True).
+
+production.py: Preparado para o futuro (PostgreSQL, segurança rígida).
+
+templates/, static/, media/, shared/: Pastas globais criadas para evitar redundância entre apps.
+
+🔑 2. Identidade e Segurança (App Users)
+CustomUser: Implementamos um modelo de usuário personalizado herdando de AbstractUser.
+
+UUID como PK (RNF08): Configuramos o id do usuário para usar UUIDField. Isso garante que as chaves primárias não sejam sequenciais/previsíveis, aumentando a segurança e facilitando migrações.
+
+UserProfile: Criado o modelo de perfil (1:1 com CustomUser) para armazenar avatar, bio e a lógica de Streaks (gamificação).
+
+⚙️ 3. Ajustes Técnicos Críticos
+BASE_DIR: Reconfigurado no base.py para subir três níveis (.parent.parent.parent) devido à nova localização na subpasta settings/.
+
+AUTH_USER_MODEL: Apontado corretamente para users.CustomUser.
+
+Path Mapping: Injeção da pasta apps no PYTHONPATH via sys.path.insert.
+
+💡 Prompt de Encerramento de Sessão (Para usar com a IA)
+Sempre que você terminar uma rodada de código, mande este prompt para mim (ou para qualquer outra IA). Ele foi desenhado para extrair um resumo técnico que serve tanto para o seu log quanto para as mensagens de commit do Git:
+
+"Finalizei esta sessão de desenvolvimento no projeto OrganizaEstudy. Com base no que trabalhamos agora, gere um resumo técnico contendo:
+
+O que foi implementado (arquivos criados/modificados).
+
+Decisões técnicas tomadas (por que fizemos dessa forma).
+
+Estado atual do projeto (onde paramos exatamente).
+
+Próximo passo imediato (o que deve ser feito na próxima sessão).
+Use uma linguagem profissional voltada para portfólio."

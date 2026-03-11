@@ -1,0 +1,205 @@
+OrganizaEstudy — Fase 1: Planejamento Arquitetural
+Vamos estruturar o projeto com rigor técnico antes de escrever uma linha de código. Aqui está o planejamento completo.
+
+📁 Estrutura de Pastas
+organizaEstudy/
+├── config/                          # Núcleo de configuração do projeto Django
+│   ├── settings/
+│   │   ├── __init__.py
+│   │   ├── base.py                  # Configurações compartilhadas
+│   │   ├── development.py           # Overrides para dev (SQLite, DEBUG=True)
+│   │   └── production.py            # Overrides para prod (PostgreSQL, S3, etc.)
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+│
+├── apps/
+│   ├── users/                       # App de Autenticação e Perfis
+│   │   ├── migrations/
+│   │   ├── templates/users/
+│   │   ├── admin.py
+│   │   ├── forms.py
+│   │   ├── models.py                # CustomUser, UserProfile
+│   │   ├── services.py              # Lógica de negócio de usuário
+│   │   ├── urls.py
+│   │   └── views.py
+│   │
+│   ├── core/                        # App de Ciclos de Estudo e Pomodoro
+│   │   ├── migrations/
+│   │   ├── templates/core/
+│   │   ├── admin.py
+│   │   ├── forms.py
+│   │   ├── models.py                # Subject, StudySession, PomodoroSession
+│   │   ├── services.py              # PomodoroService, StreakService
+│   │   ├── urls.py
+│   │   └── views.py
+│   │
+│   ├── tasks/                       # App Central de Tarefas
+│   │   ├── migrations/
+│   │   ├── templates/tasks/
+│   │   ├── admin.py
+│   │   ├── forms.py
+│   │   ├── models.py                # Task, TaskPriority
+│   │   ├── services.py              # TaskService, DeadlineNotificationService
+│   │   ├── urls.py
+│   │   └── views.py
+│   │
+│   ├── knowledge/                   # App Knowledge Base (Markdown + Anexos)
+│   │   ├── migrations/
+│   │   ├── templates/knowledge/
+│   │   ├── admin.py
+│   │   ├── forms.py
+│   │   ├── models.py                # Note, Attachment
+│   │   ├── services.py              # MarkdownService, AttachmentService
+│   │   ├── urls.py
+│   │   └── views.py
+│   │
+│   └── analytics/                   # App Dashboard de Performance
+│       ├── migrations/
+│       ├── templates/analytics/
+│       ├── admin.py
+│       ├── models.py                # StreakRecord
+│       ├── services.py              # AnalyticsService, ChartDataService
+│       ├── urls.py
+│       └── views.py
+│
+├── shared/                          # Módulos reutilizáveis (DRY)
+│   ├── mixins.py                    # LoginRequiredMixin customizado, etc.
+│   ├── validators.py                # Validadores reutilizáveis
+│   └── utils.py                     # Helpers genéricos
+│
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── img/
+│
+├── media/                           # Uploads de usuário (PDFs, imagens)
+│
+├── templates/
+│   ├── base.html
+│   ├── partials/
+│   │   ├── _navbar.html
+│   │   ├── _sidebar.html
+│   │   └── _messages.html
+│   └── errors/
+│       ├── 404.html
+│       └── 500.html
+│
+├── tests/                           # Testes desacoplados por app
+│   ├── users/
+│   ├── core/
+│   ├── tasks/
+│   ├── knowledge/
+│   └── analytics/
+│
+├── docs/
+│   ├── db_diagram.png               # Diagrama ERD exportado
+│   └── api_reference.md
+│
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── manage.py
+├── requirements/
+│   ├── base.txt
+│   ├── development.txt
+│   └── production.txt
+└── README.md
+
+🗂️ Diagrama de Entidades (ERD)
+┌─────────────────────────────────────────────────────────────────────┐
+│                          USERS                                       │
+├──────────────────────────────────────────────────────────────────────┤
+│ CustomUser                                                           │
+│ ─────────────────────────                                            │
+│ id (PK, UUID)                                                        │
+│ email (unique)                                                       │
+│ username                                                             │
+│ is_active / is_staff                                                 │
+│ created_at / updated_at                                              │
+│                                                                      │
+│ UserProfile (1:1 → CustomUser)                                       │
+│ ─────────────────────────────                                        │
+│ avatar                                                               │
+│ bio                                                                  │
+│ daily_goal_minutes                                                   │
+│ current_streak (int)                                                 │
+│ longest_streak (int)                                                 │
+└──────────────────────────────────────────────────────────────────────┘
+              │
+              │ 1:N (todas as entidades abaixo pertencem a um user)
+              ▼
+┌──────────────────────────┐    ┌──────────────────────────────────────┐
+│  CORE                    │    │  TASKS                               │
+├──────────────────────────┤    ├──────────────────────────────────────┤
+│ Subject                  │    │ Task                                 │
+│ ─────────────────────    │    │ ────────────────────────────────     │
+│ id (PK, UUID)            │    │ id (PK, UUID)                        │
+│ user (FK)                │    │ user (FK)                            │
+│ name                     │    │ subject (FK, nullable)               │
+│ color_hex                │    │ title                                │
+│ icon                     │    │ description                          │
+│ created_at               │    │ priority (ENUM: HIGH/MED/LOW)        │
+│                          │    │ status (ENUM: TODO/IN_PROG/DONE)     │
+│ StudySession             │    │ due_date                             │
+│ ─────────────────────    │    │ completed_at                         │
+│ id (PK, UUID)            │    │ created_at / updated_at              │
+│ user (FK)                │    └──────────────────────────────────────┘
+│ subject (FK)             │
+│ scheduled_date           │    ┌──────────────────────────────────────┐
+│ planned_duration_min     │    │  KNOWLEDGE                           │
+│ actual_duration_min      │    ├──────────────────────────────────────┤
+│ status (ENUM)            │    │ Note                                 │
+│                          │    │ ────────────────────────────────     │
+│ PomodoroSession          │    │ id (PK, UUID)                        │
+│ ─────────────────────    │    │ user (FK)                            │
+│ id (PK, UUID)            │    │ subject (FK, nullable)               │
+│ study_session (FK)       │    │ title                                │
+│ started_at               │    │ content_md (TextField)               │
+│ ended_at                 │    │ is_pinned                            │
+│ duration_min             │    │ created_at / updated_at              │
+│ was_completed            │    │                                      │
+└──────────────────────────┘    │ Attachment (N:1 → Note)              │
+                                │ ────────────────────────────────     │
+                                │ id (PK, UUID)                        │
+                                │ note (FK)                            │
+                                │ file (FileField)                     │
+                                │ file_type (ENUM: PDF/IMAGE/OTHER)    │
+                                │ uploaded_at                          │
+                                └──────────────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│  ANALYTICS                                   │
+├──────────────────────────────────────────────┤
+│ StreakRecord                                  │
+│ ─────────────────────────────────────        │
+│ id (PK, UUID)                                │
+│ user (FK)                                    │
+│ date (DateField, unique_together com user)   │
+│ minutes_studied                              │
+│ goal_achieved (bool)                         │
+└──────────────────────────────────────────────┘
+
+✅ Requisitos Funcionais (RF)
+IDMóduloDescriçãoRF01UsersCadastro com e-mail, login, logout e recuperação de senhaRF02UsersPerfil editável com avatar, bio e meta diária de minutosRF03CoreCRUD de Disciplinas (Subject) com cor e ícone personalizadosRF04CoreAgendamento de sessões de estudo com data e duração planejadaRF05CoreTimer Pomodoro integrado que persiste o tempo real estudadoRF06TasksCRUD de tarefas com título, descrição, prioridade e prazoRF07TasksAlteração de status de tarefas (To Do → In Progress → Done)RF08TasksAlertas visuais (Django Messages) para tarefas com prazo próximoRF09KnowledgeCRUD de notas com editor Markdown com preview em tempo realRF10KnowledgeUpload de anexos (PDF/Imagem) vinculados a uma notaRF11KnowledgeFiltro e busca de notas por título, disciplina ou conteúdoRF12AnalyticsDashboard com gráfico de horas estudadas por semana/mêsRF13AnalyticsSistema de Streaks: registro diário e exibição de sequência atualRF14AnalyticsIndicadores de tarefas concluídas vs. pendentes
+
+🔒 Requisitos Não-Funcionais (RNF)
+IDCategoriaDescriçãoRNF01SegurançaTodas as views protegidas por LoginRequired. CSRF ativo em todos os formsRNF02SegurançaSenhas hasheadas com PBKDF2 (padrão Django). Validação robusta no cadastroRNF03QualidadeConformidade total com PEP 8. Docstrings em todas as classes e métodos públicosRNF04QualidadeLógica de negócio isolada em services.py (sem lógica nas views ou models)RNF05QualidadeCobertura de testes ≥ 80% nos módulos services.pyRNF06AmbienteVariáveis sensíveis gerenciadas com python-decouple via arquivo .envRNF07PortabilidadeSettings separados por ambiente; troca SQLite → PostgreSQL sem alterar códigoRNF08EscalabilidadeUUIDs como PKs em todos os models para compatibilidade com microsserviços futurosRNF09DeployDockerfile e docker-compose.yml funcionais com serviços web + db + nginxRNF10DocumentaçãoREADME.md com: setup, variáveis de ambiente, diagrama ERD e referência de URLsRNF11UXSistema de feedback com django.contrib.messages em todas as ações do usuárioRNF12PerformanceUso de select_related e prefetch_related para evitar queries N+1
+
+🏗️ Decisões de Arquitetura
+Por que services.py por app?
+Segue o princípio da Responsabilidade Única (SOLID-S). A view só orquestra HTTP; o model só define estrutura de dados; o service contém toda a regra de negócio — isso torna o código testável de forma unitária sem precisar de um request Django.
+Por que UUID como PK?
+Elimina IDs sequenciais previsíveis (segurança), facilita merge de dados entre ambientes e prepara a base para uma eventual migração para microsserviços ou API REST.
+Por que settings modulares?
+Permite que development.py use SQLite com DEBUG=True e production.py use PostgreSQL com ALLOWED_HOSTS e storage em nuvem — sem alterar uma única linha de código da aplicação.
+
+🗺️ Roadmap de Fases
+Fase 1 ✅  Planejamento (este documento)
+Fase 2 →   Scaffold do projeto + App Users (Auth completo)
+Fase 3 →   App Core (Subjects, StudySessions, Pomodoro)
+Fase 4 →   App Tasks (CRUD + alertas de prazo)
+Fase 5 →   App Knowledge (Markdown + Upload)
+Fase 6 →   App Analytics (Streaks + Gráficos)
+Fase 7 →   Docker, testes, README final

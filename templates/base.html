@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}OrganizaEstudy{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="h-full font-sans text-gray-800">
+
+    {% if messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+        {% for message in messages %}
+        <div class="px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium
+            {% if message.tags == 'success' %} bg-green-500
+            {% elif message.tags == 'error' %}   bg-red-500
+            {% elif message.tags == 'warning' %} bg-yellow-500
+            {% else %}                            bg-indigo-500
+            {% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+</body>
+</html>
+```
