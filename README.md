@@ -26,18 +26,3 @@ O projeto segue as práticas de desenvolvimento Django, com foco em **escalabili
 * **Frontend:** Django Templates + JavaScript Vanilla.
 * **Infra:** Docker & Docker Compose para padronização de ambiente.
 
-### Estrutura de Pastas (Padrão Enterprise)
-
-organizaEstudy/
-├── apps/               # Aplicações de negócio (Users, Tasks, Core, Analytics)
-├── config/             # Configurações do Django (Settings modulares)
-├── shared/             # Mixins, validadores e utilitários globais
-├── templates/          # Interface do usuário
-└── static/             # Assets (CSS/JS/Images)
-
-
-
-<<<<<<< HEAD
-
-=======
->>>>>>> 168c050 (feat: add core/models and readjust gitignore and readme.md)
