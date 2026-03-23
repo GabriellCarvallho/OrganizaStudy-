@@ -30,7 +30,7 @@ class DashBoardView(LoginRequiredMixin, View):
         subjects = Subject.objects.filter(user=user)
         profile = user.userprofile
 
-        context = {"sessionsRecent": sessionsRecent, "subjects": subjects, "profile": profile, "today": today, "total_sessions": StudySession.objects.filter(user=user).count(), "completed_today": StudySession.object.filter(user=user, scheduled_date=today, status=StudySession.Status.COMPLETED).count(),}
+        context = {"sessionsRecent": sessionsRecent, "subjects": subjects, "profile": profile, "today": today, "total_sessions": StudySession.objects.filter(user=user).count(), "completed_today": StudySession.objects.filter(user=user, scheduled_date=today, status=StudySession.Status.COMPLETED).count(),}
         return render(request, self.template_name, context)
     
 
@@ -65,3 +65,69 @@ class SubjectListView(LoginRequiredMixin, View):
 
 
     
+class SubjectDeleteView(LoginRequiredMixin, View):
+    """Meio para excluir alguma disciplina"""
+    login_url = "/users/login/"
+
+    def post(self, request, pk):
+        subject = get_object_or_404(Subject, pk=pk, user=request.user)
+        SubjectService.delete_subject(subject)
+        messages.success(request, "Matéria removida")
+        return redirect("core:subject_list")
+
+
+
+class PomodoroView(LoginRequiredMixin, View):
+    """ Pomodro com a configuração de tempo escolhida pelo usuario """
+
+    login_url = "/users/login/"
+    template_name = "core/pomodoro.html"
+
+    def get(self, request):
+        form = PomodoroConfigForm(user=request.user)
+        return render(request, self.template_name, {"form": form})
+    
+
+    def post(self, request):
+        form = PomodoroConfigForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            study_session, pomodoro = PomodoroService.start_session(user=request.user, subject_id=form.cleaned_data["subject"].id if form.cleaned_data["subject"] else None,
+            focus_duration_min=form.cleaned_data["focus_duration_min"], break_duration_min=form.cleaned_data["break_duration_min"], )
+            return redirect("core:pomodoro_timer", pk=pomodoro.pk)
+        
+        return render(request, self.template_name, {"form": form})
+    
+
+class PomodoroCompleteView(LoginRequiredMixin, View):
+    """Aqui iremos concluir um ciclo do pomodoro e atualizar o streak."""
+
+    login_url = "/users/login/"
+
+    def post(self, request, pk):
+        pomodoro = get_object_or_404(
+            PomodoroSession,
+            pk=pk,
+            study_session__user = request.user
+        )
+
+        PomodoroService.complete_pomodoro(pomodoro)
+        messages.success(request, f"Temporizador personalizado de {pomodoro.focus_duration_min} minutos concluído")
+        return redirect("core:dashboard")
+    
+
+class PomodoroTimeView(LoginRequiredMixin, View):
+    """ Tela do tempo em execução para o usuario"""
+
+    login_url = "/users/login/"
+
+    template_name = "core/pomodoro_time.html" 
+
+    def get(self, request, pk):
+        pomodoro = get_object_or_404(
+            PomodoroSession,
+            pk=pk,
+            study_session__user = request.user
+        )  
+        return render(request, self.template_name, {"pomodoro": pomodoro})
+    
+
